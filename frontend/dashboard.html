@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Smart E-Waste Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/index.html">
+                <i class="bi bi-recycle text-success me-2 glow-text"></i>
+                <span class="text-gradient">SmartEWaste</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link nav-link-custom" href="/index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom active" href="/dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom" href="/rewards.html">Rewards</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom text-danger" href="#"
+                            onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <h1 class="fw-bold text-white mb-1">Welcome, <span id="username-display"
+                        class="text-gradient">Recycler</span>!</h1>
+                <p class="text-muted mb-0">Help preserve our ecosystem by managing and tracking your electronic waste.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="/submitWaste.html" class="btn btn-neon-green px-4 py-2.5">
+                    <i class="bi bi-plus-circle me-1"></i> Submit E-Waste
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <!-- Points Ring Card -->
+            <div class="col-lg-4 col-md-6">
+                <div class="glass-card text-center h-100 py-4">
+                    <h5 class="text-white mb-4">Your Reward Points</h5>
+                    <div class="reward-circle-container">
+                        <svg width="150" height="150" viewBox="0 0 150 150">
+                            <defs>
+                                <linearGradient id="reward-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#10b981" />
+                                    <stop offset="100%" stop-color="#00f2fe" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="reward-circle-bg" cx="75" cy="75" r="65" />
+                            <circle class="reward-circle-progress" id="points-progress-circle" cx="75" cy="75" r="65"
+                                stroke-dasharray="408.4" stroke-dashoffset="408.4" />
+                        </svg>
+                        <div class="reward-circle-text">
+                            <div class="reward-circle-number" id="points-display">0</div>
+                            <div class="reward-circle-label">Points</div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="/rewards.html" class="btn btn-outline-neon btn-sm px-3">Redeem Vouchers</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Summary -->
+            <div class="col-lg-4 col-md-6">
+                <div class="glass-card h-100">
+                    <h5 class="text-white mb-4"><i class="bi bi-person-badge text-success me-2"></i>Profile Summary</h5>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Registered Phone</small>
+                        <span class="text-white fw-medium" id="phone-display">-</span>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Registered Email</small>
+                        <span class="text-white fw-medium" id="email-display">-</span>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">System Status</small>
+                        <span
+                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Active
+                            Member</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nearby Center Card -->
+            <div class="col-lg-4 col-md-12">
+                <div class="glass-card h-100">
+                    <h5 class="text-white mb-3"><i class="bi bi-geo-alt text-success me-2"></i>Preferred Centers</h5>
+                    <div id="centers-list" class="small">
+                        <!-- Loaded dynamically -->
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submitted E-Waste Table -->
+        <div class="glass-card mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-white mb-0"><i class="bi bi-journal-text text-success me-2"></i>Submitted
+                    E-Waste Records</h4>
+                <span class="badge bg-secondary-subtle text-muted rounded-pill px-2.5 py-1.5" id="record-count">0
+                    submissions</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-glass text-white w-100 align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Waste ID</th>
+                            <th scope="col">Device Name</th>
+                            <th scope="col">Center</th>
+                            <th scope="col">Submission Date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Photo</th>
+                            <th scope="col" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissions-tbody">
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                No submissions found. Click "Submit E-Waste" above to add record.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary border-opacity-25" style="border-radius: 16px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-white text-gradient" id="qrModalTitle">E-Waste QR Identification
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p class="text-muted small mb-4">Present this QR Code at the collection center for validation.</p>
+                    <div class="p-3 bg-white d-inline-block rounded-4 shadow-lg mb-3">
+                        <img id="modal-qr-image" src="" alt="QR Code" style="width: 250px; height: 250px;">
+                    </div>
+                    <div class="mt-2 text-start px-4">
+                        <div class="text-white small mb-1"><strong>Waste ID:</strong> <span
+                                id="modal-qr-waste-id"></span></div>
+                        <div class="text-white small mb-1"><strong>Device:</strong> <span id="modal-qr-device"></span>
+                        </div>
+                        <div class="text-white small mb-1"><strong>Drop-off Center:</strong> <span
+                                id="modal-qr-center"></span></div>
+                        <div class="text-white small"><strong>Status:</strong> <span id="modal-qr-status"
+                                class="fw-bold"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-auto border-top border-secondary border-opacity-10 text-center">
+        <p class="text-muted mb-0 small">&copy; 2026 Smart E-Waste Management System.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let modalObj = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            if (user.role !== 'USER') {
+                localStorage.clear();
+                window.location.href = '/login.html';
+                return;
+            }
+
+            modalObj = new bootstrap.Modal(document.getElementById('qrModal'));
+
+            // Load user data
+            document.getElementById('username-display').innerText = user.name;
+            document.getElementById('phone-display').innerText = user.phone;
+            document.getElementById('email-display').innerText = user.email;
+
+            // Set points circle progress
+            updatePointsCircle(user.rewardPoints);
+
+            // Fetch submissions & centers
+            fetchSubmissions(user.userId);
+            fetchCenters();
+        });
+
+        function updatePointsCircle(points) {
+            document.getElementById('points-display').innerText = points;
+            const maxPointsGoal = 1000;
+            const progressRatio = Math.min(points / maxPointsGoal, 1);
+            const radius = 65;
+            const circumference = 2 * Math.PI * radius; // 408.4
+            const offset = circumference - (progressRatio * circumference);
+
+            const circle = document.getElementById('points-progress-circle');
+            circle.style.strokeDashoffset = offset;
+        }
+
+        async function fetchSubmissions(userId) {
+            try {
+                // Also refetch user details to get fresh points count
+                const uRes = await fetch(`/api/users/${userId}`);
+                if (uRes.ok) {
+                    const uData = await uRes.json();
+                    updatePointsCircle(uData.rewardPoints);
+                    // update local storage
+                    const localUser = JSON.parse(localStorage.getItem('user'));
+                    localUser.rewardPoints = uData.rewardPoints;
+                    localStorage.setItem('user', JSON.stringify(localUser));
+                }
+
+                const response = await fetch(`/api/waste/user/${userId}`);
+                if (response.ok) {
+                    const submissions = await response.json();
+                    renderSubmissions(submissions);
+                }
+            } catch (err) {
+                console.error('Error fetching submissions:', err);
+            }
+        }
+
+        async function fetchCenters() {
+            try {
+                const response = await fetch('/api/centers');
+                if (response.ok) {
+                    const centers = await response.json();
+                    const listDiv = document.getElementById('centers-list');
+                    listDiv.innerHTML = '';
+
+                    centers.forEach(c => {
+                        listDiv.innerHTML += `
+                            <div class="p-3 mb-2 rounded border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="text-white d-block">${c.centerName}</strong>
+                                    <span class="text-muted text-xs"><i class="bi bi-geo-alt me-1"></i>${c.location}</span>
+                                </div>
+                                <span class="text-muted text-xs" title="Call Center"><i class="bi bi-telephone-outbound text-success"></i></span>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching centers:', err);
+            }
+        }
+
+        function renderSubmissions(list) {
+            const tbody = document.getElementById('submissions-tbody');
+            document.getElementById('record-count').innerText = `${list.length} submission${list.length !== 1 ? 's' : ''}`;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            No submissions found. Click "Submit E-Waste" above to add record.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            list.forEach(ws => {
+                let statusBadge = '';
+                const status = ws.status;
+                if (status === 'Pending') statusBadge = '<span class="badge-glow-pending">Pending</span>';
+                else if (status === 'Received') statusBadge = '<span class="badge-glow-received">Received</span>';
+                else if (status === 'In Transit') statusBadge = '<span class="badge-glow-transit">In Transit</span>';
+                else if (status === 'Recycling Center') statusBadge = '<span class="badge-glow-center">Recycling Center</span>';
+                else if (status === 'Recycled') statusBadge = '<span class="badge-glow-recycled">Recycled</span>';
+
+                const rawDate = new Date(ws.date);
+                const formattedDate = rawDate.toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                const photoImg = ws.photo
+                    ? `<a href="${ws.photo}" target="_blank"><img src="${ws.photo}" class="rounded shadow" style="width: 50px; height: 35px; object-fit: cover;"></a>`
+                    : `<span class="text-muted small">No Photo</span>`;
+
+                tbody.innerHTML += `
+                    <tr class="table-row">
+                        <td><code class="text-info">${ws.wasteId}</code></td>
+                        <td><strong>${ws.deviceName}</strong> <span class="text-muted">x${ws.quantity}</span></td>
+                        <td>${ws.center.centerName}</td>
+                        <td><small>${formattedDate}</small></td>
+                        <td>${statusBadge}</td>
+                        <td>${photoImg}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-neon me-2" onclick="showQR('${ws.wasteId}', '${ws.deviceName}', '${ws.center.centerName}', '${status}', '${ws.qrPath}')">
+                                <i class="bi bi-qr-code"></i> QR
+                            </button>
+                            <a href="/tracking.html?id=${ws.wasteId}" class="btn btn-sm btn-neon-blue">
+                                <i class="bi bi-truck"></i> Track
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function showQR(id, device, center, status, qrPath) {
+            document.getElementById('modal-qr-waste-id').innerText = id;
+            document.getElementById('modal-qr-device').innerText = device;
+            document.getElementById('modal-qr-center').innerText = center;
+            document.getElementById('modal-qr-status').innerText = status;
+            document.getElementById('modal-qr-status').className =
+                status === 'Recycled' ? 'text-success fw-bold' :
+                    status === 'Pending' ? 'text-warning fw-bold' : 'text-primary fw-bold';
+
+            // Set image source.
+            document.getElementById('modal-qr-image').src = qrPath ? qrPath : '';
+            modalObj.show();
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+
+</html>

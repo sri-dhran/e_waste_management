@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rewards - Smart E-Waste Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/index.html">
+                <i class="bi bi-recycle text-success me-2 glow-text"></i>
+                <span class="text-gradient">SmartEWaste</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link nav-link-custom" href="/index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom" href="/dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom active" href="/rewards.html">Rewards</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom text-danger" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <h1 class="fw-bold text-white mb-1">Rewards & <span class="text-gradient">Redemptions</span></h1>
+                <p class="text-muted mb-0">Disposing e-waste correctly helps the environment and rewards you with points.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="glass-card d-inline-block px-4 py-2 border-success border-opacity-25" style="border-radius: 12px; background: rgba(16, 185, 129, 0.05);">
+                    <small class="text-muted d-block text-uppercase text-xs" style="letter-spacing: 1px;">Current Balance</small>
+                    <h3 class="fw-extrabold text-success mb-0" id="total-points-display">0 pts</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Side: Redeem Vouchers -->
+            <div class="col-lg-7">
+                <div class="glass-card h-100">
+                    <h4 class="text-white fw-bold mb-4"><i class="bi bi-gift text-success me-2"></i>Redeem Vouchers</h4>
+                    
+                    <div id="redemption-alert" class="alert alert-info" style="display: none;" role="alert"></div>
+
+                    <div class="row g-3">
+                        <!-- Voucher 1 -->
+                        <div class="col-12">
+                            <div class="p-3 rounded border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center">
+                                <div class="mb-3 mb-sm-0">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle mb-2">Popular</span>
+                                    <h5 class="text-white mb-1">₹100 Amazon Pay Gift Card</h5>
+                                    <small class="text-muted">Discounts on eco-friendly items on Amazon.</small>
+                                </div>
+                                <button class="btn btn-neon-green" onclick="redeem(500, 'Amazon Pay Voucher')">500 pts</button>
+                            </div>
+                        </div>
+
+                        <!-- Voucher 2 -->
+                        <div class="col-12">
+                            <div class="p-3 rounded border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center">
+                                <div class="mb-3 mb-sm-0">
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle mb-2">Tech Deals</span>
+                                    <h5 class="text-white mb-1">₹500 Croma E-Waste Recycling Voucher</h5>
+                                    <small class="text-muted">Redeemable at any Croma tech store.</small>
+                                </div>
+                                <button class="btn btn-neon-green" onclick="redeem(2000, 'Croma Voucher')">2,000 pts</button>
+                            </div>
+                        </div>
+
+                        <!-- Voucher 3 -->
+                        <div class="col-12">
+                            <div class="p-3 rounded border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center">
+                                <div class="mb-3 mb-sm-0">
+                                    <span class="badge bg-purple-subtle text-purple border border-purple-subtle mb-2" style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); color: #a78bfa;">Certificate</span>
+                                    <h5 class="text-white mb-1">E-Waste Conservator Certificate</h5>
+                                    <small class="text-muted">Official digital certificate signed by Green Earth Foundation.</small>
+                                </div>
+                                <button class="btn btn-outline-neon" onclick="redeem(100, 'Eco Certificate')">100 pts</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Rewards Logs -->
+            <div class="col-lg-5">
+                <div class="glass-card h-100">
+                    <h4 class="text-white fw-bold mb-4"><i class="bi bi-clock-history text-success me-2"></i>Points History</h4>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-dark table-hover table-striped align-middle bg-transparent text-white" style="--bs-table-bg: transparent; --bs-table-border-color: rgba(255,255,255,0.05);">
+                            <thead>
+                                <tr>
+                                    <th>Activity</th>
+                                    <th>Points</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rewards-tbody">
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted small">Loading history...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-auto border-top border-secondary border-opacity-10 text-center">
+        <p class="text-muted mb-0 small">&copy; 2026 Smart E-Waste Management System.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let userId = null;
+        let currentPoints = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            if (user.role !== 'USER') {
+                localStorage.clear();
+                window.location.href = '/login.html';
+                return;
+            }
+
+            userId = user.userId;
+            loadRewardsAndPoints();
+        });
+
+        async function loadRewardsAndPoints() {
+            try {
+                // Fetch User Details to get live points
+                const uRes = await fetch(`/api/users/${userId}`);
+                if (uRes.ok) {
+                    const uData = await uRes.json();
+                    currentPoints = uData.rewardPoints;
+                    document.getElementById('total-points-display').innerText = `${currentPoints} pts`;
+                    
+                    // Update locally stored points
+                    const localUser = JSON.parse(localStorage.getItem('user'));
+                    localUser.rewardPoints = currentPoints;
+                    localStorage.setItem('user', JSON.stringify(localUser));
+                }
+
+                // Fetch Rewards Logs
+                const rRes = await fetch(`/api/waste/user/${userId}/rewards`);
+                if (rRes.ok) {
+                    const rewards = await rRes.json();
+                    renderRewards(rewards);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderRewards(list) {
+            const tbody = document.getElementById('rewards-tbody');
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted small">No points earned yet. Go to Dashboard and submit e-waste!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            list.forEach(r => {
+                const date = new Date(r.date).toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                });
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <span class="d-block text-white fw-medium">Recycled Device</span>
+                            <small class="text-muted">${r.wasteSubmission.wasteId} - ${r.wasteSubmission.deviceName}</small>
+                        </td>
+                        <td><span class="text-success fw-bold">+${r.points}</span></td>
+                        <td><small class="text-muted">${date}</small></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function redeem(points, item) {
+            const alertBox = document.getElementById('redemption-alert');
+            alertBox.style.display = 'none';
+
+            if (currentPoints < points) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerText = `Insufficient points! You need ${points} points to redeem this, but you only have ${currentPoints} points.`;
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            // Perform redemption locally (mock, points are deducted from display)
+            currentPoints -= points;
+            document.getElementById('total-points-display').innerText = `${currentPoints} pts`;
+
+            // Display success message
+            alertBox.className = 'alert alert-success';
+            alertBox.innerHTML = `
+                <strong>Redemption Successful!</strong><br>
+                You redeemed <strong>${item}</strong> for ${points} points. 
+                Your voucher code is: <strong>${Math.random().toString(36).substring(2, 10).toUpperCase()}</strong>.
+                It has also been emailed to your registered address.
+            `;
+            alertBox.style.display = 'block';
+            
+            // Note: Since this is a demo, we update the local points display but we don't persist it. 
+            // In a production system, we'd call a POST /api/rewards/redeem API. 
+            // To make the demo robust, let's keep this clean mock, which operates on the current UI state.
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>

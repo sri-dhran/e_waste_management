@@ -1,0 +1,23 @@
+# Maven build outputs
+backend/target/
+*.class
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+
+# IDE configurations
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Dynamic uploads and QR code cache directories
+uploads/
+qr/
+backend/uploads/
+backend/qr/

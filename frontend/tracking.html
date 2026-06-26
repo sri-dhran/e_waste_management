@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track E-Waste - Smart E-Waste Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/index.html">
+                <i class="bi bi-recycle text-success me-2 glow-text"></i>
+                <span class="text-gradient">SmartEWaste</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link nav-link-custom" href="/index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom active" id="nav-dash-link" href="/dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom text-danger" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="glass-card mb-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <a href="#" onclick="goBack()" class="btn btn-outline-neon btn-sm me-3"><i class="bi bi-arrow-left"></i></a>
+                        <div>
+                            <h3 class="fw-bold text-white mb-0">E-Waste Logistics Tracking</h3>
+                            <p class="text-muted mb-0">Real-time status updates of your submitted electronic waste</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3 mb-4 rounded border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex flex-column flex-md-row justify-content-between">
+                        <div class="mb-2 mb-md-0">
+                            <span class="text-muted d-block text-xs uppercase" style="letter-spacing: 1px;">Waste Reference ID</span>
+                            <code class="text-info fs-5" id="tracking-id">-</code>
+                        </div>
+                        <div class="mb-2 mb-md-0">
+                            <span class="text-muted d-block text-xs uppercase" style="letter-spacing: 1px;">Device Name</span>
+                            <span class="text-white fw-bold" id="tracking-device">-</span>
+                        </div>
+                        <div>
+                            <span class="text-muted d-block text-xs uppercase" style="letter-spacing: 1px;">Final Drop-off Destination</span>
+                            <span class="text-white fw-medium" id="tracking-center">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Stepper Progress Tracker -->
+                    <div class="px-3">
+                        <div class="stepper-container">
+                            <div class="stepper-line"></div>
+                            <div class="stepper-line-progress" id="stepper-progress" style="width: 0%;"></div>
+                            
+                            <!-- Node 1 -->
+                            <div class="step-node" id="step-pending">
+                                <div class="step-circle"><i class="bi bi-file-earmark-plus"></i></div>
+                                <div class="step-label">Submitted</div>
+                            </div>
+                            
+                            <!-- Node 2 -->
+                            <div class="step-node" id="step-received">
+                                <div class="step-circle"><i class="bi bi-box-seam"></i></div>
+                                <div class="step-label">Received</div>
+                            </div>
+                            
+                            <!-- Node 3 -->
+                            <div class="step-node" id="step-transit">
+                                <div class="step-circle"><i class="bi bi-truck"></i></div>
+                                <div class="step-label">In Transit</div>
+                            </div>
+                            
+                            <!-- Node 4 -->
+                            <div class="step-node" id="step-center">
+                                <div class="step-circle"><i class="bi bi-buildings"></i></div>
+                                <div class="step-label">Recycling Center</div>
+                            </div>
+                            
+                            <!-- Node 5 -->
+                            <div class="step-node" id="step-recycled">
+                                <div class="step-circle"><i class="bi bi-check-all"></i></div>
+                                <div class="step-label">Recycled</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logistics Logs Timeline Card -->
+                <div class="glass-card">
+                    <h4 class="text-white fw-bold mb-4"><i class="bi bi-activity text-success me-2"></i>Logistics Transit History</h4>
+                    
+                    <div id="timeline-logs" class="position-relative ps-4 border-start border-secondary border-opacity-25" style="margin-left: 10px;">
+                        <!-- Dynamically filled with logs -->
+                        <div class="text-center py-4 text-muted small">No logistics transit logs recorded yet. Once drop-off is accepted by collection center staff, logs will appear here.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-auto border-top border-secondary border-opacity-10 text-center">
+        <p class="text-muted mb-0 small">&copy; 2026 Smart E-Waste Management System.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let dashboardUrl = '/dashboard.html';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            if (user.role === 'ADMIN') {
+                dashboardUrl = '/admin.html';
+            } else if (user.role === 'STAFF') {
+                dashboardUrl = '/center.html';
+            }
+            
+            document.getElementById('nav-dash-link').href = dashboardUrl;
+
+            // Get ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (!id) {
+                window.location.href = dashboardUrl;
+                return;
+            }
+
+            loadTracking(id);
+        });
+
+        async function loadTracking(wasteId) {
+            try {
+                // Fetch submission details
+                const sRes = await fetch(`/api/waste/${wasteId}`);
+                if (!sRes.ok) {
+                    alert('Submission not found');
+                    window.location.href = dashboardUrl;
+                    return;
+                }
+                const ws = await sRes.json();
+                
+                document.getElementById('tracking-id').innerText = ws.wasteId;
+                document.getElementById('tracking-device').innerText = `${ws.deviceName} (x${ws.quantity})`;
+                document.getElementById('tracking-center').innerText = `${ws.center.centerName} (${ws.center.location})`;
+
+                // Update stepper state
+                updateStepper(ws.status);
+
+                // Fetch tracking history
+                const tRes = await fetch(`/api/waste/${wasteId}/tracking`);
+                if (tRes.ok) {
+                    const logs = await tRes.json();
+                    renderTimeline(ws, logs);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function updateStepper(status) {
+            const nodes = ['step-pending', 'step-received', 'step-transit', 'step-center', 'step-recycled'];
+            
+            // Define active count based on current status
+            let activeCount = 1; // Submitted is always active
+            let progressWidth = '0%';
+            
+            if (status === 'Received') {
+                activeCount = 2;
+                progressWidth = '25%';
+            } else if (status === 'In Transit') {
+                activeCount = 3;
+                progressWidth = '50%';
+            } else if (status === 'Recycling Center') {
+                activeCount = 4;
+                progressWidth = '75%';
+            } else if (status === 'Recycled') {
+                activeCount = 5;
+                progressWidth = '100%';
+            }
+
+            document.getElementById('stepper-progress').style.width = progressWidth;
+
+            for (let i = 0; i < nodes.length; i++) {
+                const node = document.getElementById(nodes[i]);
+                if (i < activeCount - 1) {
+                    node.className = 'step-node completed';
+                } else if (i === activeCount - 1) {
+                    node.className = 'step-node active';
+                } else {
+                    node.className = 'step-node';
+                }
+            }
+        }
+
+        function renderTimeline(ws, logs) {
+            const container = document.getElementById('timeline-logs');
+            container.innerHTML = '';
+
+            // Add static "Submission Created" log (all items have this)
+            const rawSubDate = new Date(ws.date);
+            const subDate = rawSubDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            const subTime = rawSubDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+            let logsHTML = `
+                <div class="position-relative mb-4">
+                    <div class="position-absolute bg-success rounded-circle shadow" style="width: 14px; height: 14px; left: -27px; top: 5px; border: 3px solid var(--bg-dark);"></div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="text-white">Submission Registered</strong>
+                        <span class="badge bg-secondary-subtle text-muted text-xs">${subDate} at ${subTime}</span>
+                    </div>
+                    <p class="text-muted small mb-0">E-waste item registered in system. Drop-off QR code generated.</p>
+                </div>
+            `;
+
+            // Append dynamic transit logs
+            logs.forEach(log => {
+                const logDate = new Date(log.date + 'T' + log.time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                const logTime = log.time.substring(0, 5); // HH:MM
+
+                let iconColor = 'bg-primary';
+                let details = '';
+
+                if (log.status === 'Received') {
+                    iconColor = 'bg-primary';
+                    details = `Drop-off verified and received by staff at ${log.location}. Points will be allocated upon final processing.`;
+                } else if (log.status === 'In Transit') {
+                    iconColor = 'bg-info';
+                    details = `Electronic waste loaded and dispatch initiated from ${log.location}.`;
+                } else if (log.status === 'Recycling Center') {
+                    iconColor = 'bg-purple';
+                    details = `Shipment arrived at ${log.location} processing facility. Pre-sorting and disassembly initiated.`;
+                } else if (log.status === 'Recycled') {
+                    iconColor = 'bg-success';
+                    details = `Recycling verification complete at ${log.location}. Material harvested. <strong>100 Reward Points</strong> allocated to account.`;
+                }
+
+                logsHTML += `
+                    <div class="position-relative mb-4">
+                        <div class="position-absolute ${iconColor} rounded-circle shadow" style="width: 14px; height: 14px; left: -27px; top: 5px; border: 3px solid var(--bg-dark);"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-white">Status: ${log.status}</strong>
+                            <span class="badge bg-secondary-subtle text-muted text-xs">${logDate} at ${logTime}</span>
+                        </div>
+                        <p class="text-muted small mb-0">${details}</p>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = logsHTML;
+        }
+
+        function goBack() {
+            window.location.href = dashboardUrl;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>

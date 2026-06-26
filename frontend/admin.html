@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart E-Waste Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/index.html">
+                <i class="bi bi-recycle text-success me-2 glow-text"></i>
+                <span class="text-gradient">SmartEWaste Admin</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link nav-link-custom active" href="/admin.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom" href="/reports.html">Reports</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-custom text-danger" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="row align-items-center mb-5">
+            <div class="col">
+                <h1 class="fw-bold text-white mb-1">E-Waste Control Center</h1>
+                <p class="text-muted mb-0">Overview metrics, visual analytics charts, and transit logistics operations.</p>
+            </div>
+        </div>
+
+        <!-- Metrics Cards Grid -->
+        <div class="row g-4 mb-5">
+            <!-- Total Users -->
+            <div class="col-xl-3 col-md-6">
+                <div class="glass-card py-3.5 h-100 d-flex align-items-center">
+                    <div class="stat-icon me-3"><i class="bi bi-people"></i></div>
+                    <div>
+                        <span class="text-muted d-block text-xs uppercase" style="letter-spacing: 0.5px;">Total Users</span>
+                        <h3 class="fw-bold text-white mb-0" id="stat-users">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Waste Submitted -->
+            <div class="col-xl-3 col-md-6">
+                <div class="glass-card py-3.5 h-100 d-flex align-items-center">
+                    <div class="stat-icon stat-icon-blue me-3"><i class="bi bi-cpu"></i></div>
+                    <div>
+                        <span class="text-muted d-block text-xs uppercase" style="letter-spacing: 0.5px;">Submitted Items</span>
+                        <h3 class="fw-bold text-white mb-0" id="stat-waste">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Recycled -->
+            <div class="col-xl-3 col-md-6">
+                <div class="glass-card py-3.5 h-100 d-flex align-items-center">
+                    <div class="stat-icon me-3" style="color:#10b981; background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.15);"><i class="bi bi-check2-all"></i></div>
+                    <div>
+                        <span class="text-muted d-block text-xs uppercase" style="letter-spacing: 0.5px;">Total Recycled</span>
+                        <h3 class="fw-bold text-success mb-0" id="stat-recycled">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Request -->
+            <div class="col-xl-3 col-md-6">
+                <div class="glass-card py-3.5 h-100 d-flex align-items-center">
+                    <div class="stat-icon me-3" style="color:#f59e0b; background:rgba(245,158,11,0.08); border-color:rgba(245,158,11,0.15);"><i class="bi bi-hourglass-split"></i></div>
+                    <div>
+                        <span class="text-muted d-block text-xs uppercase" style="letter-spacing: 0.5px;">Pending Requests</span>
+                        <h3 class="fw-bold text-warning mb-0" id="stat-pending">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row g-4 mb-5">
+            <!-- Device Breakdown (Pie Chart) -->
+            <div class="col-lg-5">
+                <div class="glass-card h-100 text-center">
+                    <h5 class="text-white fw-bold mb-4 text-start"><i class="bi bi-pie-chart text-success me-2"></i>Waste Type Shares</h5>
+                    <div class="mx-auto" style="position: relative; height:250px; width:100%; max-width: 250px;">
+                        <canvas id="devicePieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Recycling Bar Chart -->
+            <div class="col-lg-7">
+                <div class="glass-card h-100">
+                    <h5 class="text-white fw-bold mb-4"><i class="bi bi-bar-chart-steps text-success me-2"></i>Recycling Progress Overview</h5>
+                    <div style="position: relative; height:250px; width:100%;">
+                        <canvas id="recycledBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Panel -->
+        <div class="glass-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-white mb-0"><i class="bi bi-sliders2 text-success me-2"></i>Disposal Submissions & Logistics Manager</h4>
+                <button class="btn btn-outline-neon btn-sm" onclick="loadDashboardData()"><i class="bi bi-arrow-clockwise"></i> Sync Database</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-glass text-white w-100 align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Device</th>
+                            <th>Quantity</th>
+                            <th>Center</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tbody">
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                Loading submission records...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Change Modal -->
+    <div class="modal fade" id="transitModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary border-opacity-25" style="border-radius: 16px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-white text-gradient">Update Transit Logistics</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="transitForm">
+                        <input type="hidden" id="transit-waste-id">
+
+                        <div class="mb-3">
+                            <label class="form-label text-white small">Reference ID</label>
+                            <input type="text" class="form-control glass-input" id="transit-waste-id-display" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="transit-status" class="form-label text-white small">New Logistics Status</label>
+                            <select class="form-select glass-input" id="transit-status" required>
+                                <option value="In Transit">In Transit (Dispatch initiated)</option>
+                                <option value="Recycling Center">Recycling Center (Arrived for sorting)</option>
+                                <option value="Recycled">Recycled (Processed & Salvaged)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="transit-location" class="form-label text-white small">Current Landmark/Facility Location</label>
+                            <input type="text" class="form-control glass-input" id="transit-location" placeholder="e.g. Tambaram Dispatch Center" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-neon-green w-100 py-2.5">
+                            <i class="bi bi-arrow-repeat me-1"></i> Update Status & Logistics Logs
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-auto border-top border-secondary border-opacity-10 text-center">
+        <p class="text-muted mb-0 small">&copy; 2026 Smart E-Waste Management System.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let modalObj = null;
+        let pieChart = null;
+        let barChart = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            if (user.role !== 'ADMIN') {
+                localStorage.clear();
+                window.location.href = '/login.html';
+                return;
+            }
+
+            modalObj = new bootstrap.Modal(document.getElementById('transitModal'));
+            loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                // Fetch Stats
+                const statsRes = await fetch('/api/admin/stats');
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    document.getElementById('stat-users').innerText = stats.totalUsers;
+                    document.getElementById('stat-waste').innerText = stats.totalWasteSubmitted;
+                    document.getElementById('stat-recycled').innerText = stats.totalRecycled;
+                    document.getElementById('stat-pending').innerText = stats.pendingRequests;
+                }
+
+                // Fetch Submissions
+                const subRes = await fetch('/api/waste/all');
+                if (subRes.ok) {
+                    const submissions = await subRes.json();
+                    renderSubmissionsTable(submissions);
+                }
+
+                // Fetch Chart Data
+                const chartRes = await fetch('/api/admin/charts');
+                if (chartRes.ok) {
+                    const chartsData = await chartRes.json();
+                    renderCharts(chartsData);
+                }
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderSubmissionsTable(list) {
+            const tbody = document.getElementById('admin-tbody');
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">No submissions found in system database.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            list.forEach(ws => {
+                let statusBadge = '';
+                const status = ws.status;
+                if (status === 'Pending') statusBadge = '<span class="badge-glow-pending">Pending</span>';
+                else if (status === 'Received') statusBadge = '<span class="badge-glow-received">Received</span>';
+                else if (status === 'In Transit') statusBadge = '<span class="badge-glow-transit">In Transit</span>';
+                else if (status === 'Recycling Center') statusBadge = '<span class="badge-glow-center">Recycling Center</span>';
+                else if (status === 'Recycled') statusBadge = '<span class="badge-glow-recycled">Recycled</span>';
+
+                const date = new Date(ws.date).toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                });
+
+                // Determine actions based on status
+                let actionBtn = '';
+                if (status === 'Pending') {
+                    actionBtn = `<span class="text-muted small">Awaiting drop-off</span>`;
+                } else if (status === 'Recycled') {
+                    actionBtn = `<span class="text-success small fw-medium"><i class="bi bi-check-circle"></i> Recycled</span>`;
+                } else {
+                    actionBtn = `
+                        <button class="btn btn-xs btn-neon-blue py-0.5 px-2 me-1" onclick="openTransitModal('${ws.wasteId}')">
+                            Update
+                        </button>
+                    `;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="table-row">
+                        <td><code class="text-info">${ws.wasteId}</code></td>
+                        <td>
+                            <strong>${ws.user.name}</strong>
+                            <small class="text-muted d-block">${ws.user.phone}</small>
+                        </td>
+                        <td><strong>${ws.deviceName}</strong></td>
+                        <td>${ws.quantity}</td>
+                        <td>${ws.center.centerName}</td>
+                        <td>${statusBadge}</td>
+                        <td><small>${date}</small></td>
+                        <td class="text-end">
+                            ${actionBtn}
+                            <a href="/tracking.html?id=${ws.wasteId}" class="btn btn-xs btn-outline-neon py-0.5 px-2">
+                                Track
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderCharts(data) {
+            // 1. Device Type Shares (Pie)
+            const deviceLabels = Object.keys(data.deviceCounts);
+            const deviceValues = Object.values(data.deviceCounts);
+
+            if (pieChart) pieChart.destroy();
+            
+            const ctxPie = document.getElementById('devicePieChart').getContext('2d');
+            
+            if (deviceLabels.length === 0) {
+                // Seed mock labels to prevent chart error when db is empty
+                deviceLabels.push('Laptops', 'Mobiles', 'Monitors');
+                deviceValues.push(1, 1, 1);
+            }
+
+            pieChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: deviceLabels,
+                    datasets: [{
+                        data: deviceValues,
+                        backgroundColor: [
+                            '#10b981', '#00f2fe', '#8b5cf6', '#ec4899', 
+                            '#f59e0b', '#3b82f6', '#14b8a6', '#f43f5e'
+                        ],
+                        borderWidth: 1,
+                        borderColor: '#090d16'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94a3b8', font: { family: 'Outfit', size: 10 } }
+                        }
+                    }
+                }
+            });
+
+            // 2. Monthly recycling overview (Bar)
+            const monthLabels = Object.keys(data.monthlyRecycled);
+            const monthValues = Object.values(data.monthlyRecycled);
+
+            if (barChart) barChart.destroy();
+
+            const ctxBar = document.getElementById('recycledBarChart').getContext('2d');
+            barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: 'Devices Recycled',
+                        data: monthValues,
+                        backgroundColor: 'rgba(0, 242, 254, 0.45)',
+                        borderColor: '#00f2fe',
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { family: 'Outfit' } } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { family: 'Outfit' }, stepSize: 1 } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function openTransitModal(wasteId) {
+            document.getElementById('transit-waste-id').value = wasteId;
+            document.getElementById('transit-waste-id-display').value = wasteId;
+            document.getElementById('transit-location').value = '';
+            
+            // Set default select option based on current DB value or clear
+            modalObj.show();
+        }
+
+        document.getElementById('transitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const wasteId = document.getElementById('transit-waste-id').value;
+            const status = document.getElementById('transit-status').value;
+            const location = document.getElementById('transit-location').value.trim();
+
+            try {
+                const response = await fetch(`/api/waste/${wasteId}/update-transit?status=${encodeURIComponent(status)}&location=${encodeURIComponent(location)}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    modalObj.hide();
+                    loadDashboardData();
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Error updating status');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error updating transit status');
+            }
+        });
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>
