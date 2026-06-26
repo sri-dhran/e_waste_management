@@ -1,0 +1,18 @@
+{
+  "name": "Smart E-Waste Management",
+  "short_name": "SmartEWaste",
+  "description": "Smart E-Waste recycling logistics tracker, verification scanning, and rewards wallet portal.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d16",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
