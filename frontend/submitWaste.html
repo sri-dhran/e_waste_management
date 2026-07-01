@@ -82,9 +82,15 @@
                             <!-- Collection Center -->
                             <div class="col-md-6">
                                 <label for="centerId" class="form-label text-white fw-medium">Drop-off Collection Center</label>
-                                <select class="form-select glass-input" id="centerId" required>
-                                    <option value="" disabled selected>Loading collection centers...</option>
-                                </select>
+                                <div class="input-group">
+                                    <select class="form-select glass-input" id="centerId" required>
+                                        <option value="" disabled selected>Loading collection centers...</option>
+                                    </select>
+                                    <button class="btn btn-outline-neon" type="button" id="detectLocationBtn" onclick="selectNearestCenter()" title="Detect and Select Nearest Center">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                    </button>
+                                </div>
+                                <small id="nearestCenterInfo" class="text-success mt-1 d-block" style="display: none; font-size: 0.85em;"></small>
                             </div>
 
                             <!-- Photo Upload -->
@@ -148,6 +154,60 @@
                 console.error(err);
                 dropdown.innerHTML = '<option value="" disabled>Connection error</option>';
             }
+        }
+
+        async function selectNearestCenter() {
+            const infoText = document.getElementById('nearestCenterInfo');
+            const detectBtn = document.getElementById('detectLocationBtn');
+            const dropdown = document.getElementById('centerId');
+
+            infoText.style.display = 'none';
+            detectBtn.innerHTML = '<span class="spinner-border spinner-border-sm text-success" role="status"></span>';
+            detectBtn.disabled = true;
+
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                detectBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                detectBtn.disabled = false;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    try {
+                        const response = await fetch(`/api/centers/nearby?latitude=${lat}&longitude=${lon}`);
+                        if (response.ok) {
+                            const centers = await response.json();
+                            if (centers.length > 0) {
+                                const nearest = centers[0];
+                                dropdown.value = nearest.centerId;
+                                infoText.innerText = `📍 Auto-selected nearest: ${nearest.centerName} (${nearest.distance} km away)`;
+                                infoText.style.display = 'block';
+                            } else {
+                                alert('No collection centers found nearby.');
+                            }
+                        } else {
+                            alert('Could not find nearby centers from server.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Server connection error while detecting nearby centers.');
+                    } finally {
+                        detectBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                        detectBtn.disabled = false;
+                    }
+                },
+                (error) => {
+                    console.error(error);
+                    alert('Geolocation permission denied or unavailable.');
+                    detectBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                    detectBtn.disabled = false;
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
         }
 
         document.getElementById('submitWasteForm').addEventListener('submit', async (e) => {
