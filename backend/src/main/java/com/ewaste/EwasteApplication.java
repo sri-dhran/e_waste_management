@@ -44,9 +44,9 @@ public class EwasteApplication {
         return args -> {
             // 1. Seed Collection Centers if empty
             if (centerRepository.count() == 0) {
-                centerRepository.save(new CollectionCenter(null, "Green Earth Recycling", "Chennai", "+91 98765 43210"));
-                centerRepository.save(new CollectionCenter(null, "Eco Waste Center", "Tambaram", "+91 87654 32109"));
-                centerRepository.save(new CollectionCenter(null, "E-Planet Recycling", "Velachery", "+91 76543 21098"));
+                centerRepository.save(new CollectionCenter(null, "Green Earth Recycling", "Chennai", "+91 98765 43210", 13.0827, 80.2707));
+                centerRepository.save(new CollectionCenter(null, "Eco Waste Center", "Tambaram", "+91 87654 32109", 12.9249, 80.1240));
+                centerRepository.save(new CollectionCenter(null, "E-Planet Recycling", "Velachery", "+91 76543 21098", 12.9815, 80.2180));
                 System.out.println("Seeded database with default collection centers.");
             }
 

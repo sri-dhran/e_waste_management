@@ -9,6 +9,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
     <!-- PWA Support -->
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/logo-512.png">
@@ -22,6 +26,14 @@
             });
         }
     </script>
+    <style>
+        .dark-map .leaflet-tile {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+        .dark-map {
+            background-color: #1a1a1a !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -123,6 +135,9 @@
                             <div class="spinner-border spinner-border-sm text-success" role="status"></div>
                         </div>
                     </div>
+                    <button class="btn btn-outline-neon btn-sm w-100 mt-3" onclick="findNearbyCenters()">
+                        <i class="bi bi-geo-fill me-1"></i> Find Nearby Centers
+                    </button>
                 </div>
             </div>
         </div>
@@ -192,6 +207,24 @@
         </div>
     </div>
 
+    <!-- Map Modal -->
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border border-secondary border-opacity-25" style="border-radius: 16px; backdrop-filter: blur(20px);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-white text-gradient" id="mapModalTitle">Nearby Recycling Centers</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div id="map-container" style="height: 380px; width: 100%; border-radius: 12px; overflow: hidden;" class="border border-secondary border-opacity-25 mb-3 dark-map"></div>
+                    <div id="map-centers-list" class="small overflow-y-auto px-1" style="max-height: 160px;">
+                        <!-- Nearby Centers loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="py-4 mt-auto border-top border-secondary border-opacity-10 text-center">
         <p class="text-muted mb-0 small">&copy; 2026 Smart E-Waste Management System.</p>
@@ -200,6 +233,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let modalObj = null;
+        let mapModalObj = null;
+        let map = null;
+        let mapMarkers = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             const userStr = localStorage.getItem('user');
@@ -216,6 +252,7 @@
             }
 
             modalObj = new bootstrap.Modal(document.getElementById('qrModal'));
+            mapModalObj = new bootstrap.Modal(document.getElementById('mapModal'));
 
             // Load user data
             document.getElementById('username-display').innerText = user.name;
@@ -363,6 +400,177 @@
         function logout() {
             localStorage.clear();
             window.location.href = '/index.html';
+        }
+
+        function findNearbyCenters() {
+            mapModalObj.show();
+        }
+
+        // Initialize Leaflet map and load locations once map modal is fully rendered
+        document.getElementById('mapModal').addEventListener('shown.bs.modal', function () {
+            if (!map) {
+                map = L.map('map-container').setView([13.0827, 80.2707], 11);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+            } else {
+                map.invalidateSize();
+            }
+            getUserLocationAndLoadCenters();
+        });
+
+        function getUserLocationAndLoadCenters() {
+            const listDiv = document.getElementById('map-centers-list');
+            listDiv.innerHTML = `
+                <div class="text-center py-4 text-white">
+                    <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                    Requesting device location...
+                </div>
+            `;
+
+            if (!navigator.geolocation) {
+                listDiv.innerHTML = `<div class="alert alert-danger text-center">Geolocation is not supported by your browser.</div>`;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    updateMapWithUserAndCenters(lat, lon);
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    listDiv.innerHTML = `
+                        <div class="alert alert-warning text-center">
+                            <i class="bi bi-exclamation-triangle me-1"></i> Location permission denied. Showing all centers instead.
+                        </div>
+                    `;
+                    loadAllCentersOnMap();
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        }
+
+        async function updateMapWithUserAndCenters(lat, lon) {
+            const listDiv = document.getElementById('map-centers-list');
+            listDiv.innerHTML = `
+                <div class="text-center py-4 text-white">
+                    <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                    Locating nearby recycling centers...
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/api/centers/nearby?latitude=${lat}&longitude=${lon}`);
+                if (!response.ok) throw new Error('API request failed');
+
+                const centers = await response.json();
+                
+                // Clear existing markers
+                mapMarkers.forEach(m => map.removeLayer(m));
+                mapMarkers = [];
+
+                // Add User Location marker (custom circle marker)
+                const userMarker = L.circleMarker([lat, lon], {
+                    color: '#00f2fe',
+                    fillColor: '#00f2fe',
+                    fillOpacity: 0.6,
+                    radius: 8
+                }).addTo(map).bindPopup('<strong>Your Location</strong>').openPopup();
+                mapMarkers.push(userMarker);
+
+                if (centers.length === 0) {
+                    listDiv.innerHTML = `<div class="alert alert-info text-center">No recycling centers found within 50km.</div>`;
+                    map.setView([lat, lon], 12);
+                    return;
+                }
+
+                listDiv.innerHTML = '';
+                const bounds = L.latLngBounds([lat, lon]);
+
+                centers.forEach(c => {
+                    const centerLat = c.latitude;
+                    const centerLon = c.longitude;
+                    
+                    const marker = L.marker([centerLat, centerLon]).addTo(map)
+                        .bindPopup(`<strong>${c.centerName}</strong><br>${c.location}<br>Distance: ${c.distance} km`);
+                    mapMarkers.push(marker);
+                    bounds.extend([centerLat, centerLon]);
+
+                    listDiv.innerHTML += `
+                        <div class="p-3 mb-2 rounded border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex justify-content-between align-items-center cursor-pointer" onclick="focusOnCenter(${centerLat}, ${centerLon}, '${c.centerName}')">
+                            <div>
+                                <strong class="text-white d-block">${c.centerName}</strong>
+                                <span class="text-muted text-xs"><i class="bi bi-geo-alt me-1"></i>${c.location} (${c.distance} km away)</span>
+                            </div>
+                            <a href="tel:${c.contact}" class="btn btn-sm btn-outline-neon"><i class="bi bi-telephone"></i> Call</a>
+                        </div>
+                    `;
+                });
+
+                map.fitBounds(bounds, { padding: [40, 40] });
+
+            } catch (err) {
+                console.error(err);
+                listDiv.innerHTML = `<div class="alert alert-danger text-center">Error loading nearby centers.</div>`;
+            }
+        }
+
+        async function loadAllCentersOnMap() {
+            const listDiv = document.getElementById('map-centers-list');
+            try {
+                const response = await fetch('/api/centers');
+                if (!response.ok) throw new Error('API request failed');
+                const centers = await response.json();
+
+                mapMarkers.forEach(m => map.removeLayer(m));
+                mapMarkers = [];
+
+                if (centers.length === 0) {
+                    listDiv.innerHTML = `<div class="alert alert-info text-center">No recycling centers registered.</div>`;
+                    return;
+                }
+
+                listDiv.innerHTML = '';
+                const bounds = [];
+
+                centers.forEach(c => {
+                    if (c.latitude && c.longitude) {
+                        const marker = L.marker([c.latitude, c.longitude]).addTo(map)
+                            .bindPopup(`<strong>${c.centerName}</strong><br>${c.location}`);
+                        mapMarkers.push(marker);
+                        bounds.push([c.latitude, c.longitude]);
+
+                        listDiv.innerHTML += `
+                            <div class="p-3 mb-2 rounded border border-secondary border-opacity-10 bg-black bg-opacity-20 d-flex justify-content-between align-items-center cursor-pointer" onclick="focusOnCenter(${c.latitude}, ${c.longitude}, '${c.centerName}')">
+                                <div>
+                                    <strong class="text-white d-block">${c.centerName}</strong>
+                                    <span class="text-muted text-xs"><i class="bi bi-geo-alt me-1"></i>${c.location}</span>
+                                </div>
+                                <a href="tel:${c.contact}" class="btn btn-sm btn-outline-neon"><i class="bi bi-telephone"></i> Call</a>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds, { padding: [40, 40] });
+                }
+            } catch (err) {
+                console.error(err);
+                listDiv.innerHTML = `<div class="alert alert-danger text-center">Error loading recycling centers.</div>`;
+            }
+        }
+
+        function focusOnCenter(lat, lon, name) {
+            map.setView([lat, lon], 15);
+            mapMarkers.forEach(m => {
+                if (m.getLatLng && m.getLatLng().lat === lat && m.getLatLng().lng === lon) {
+                    m.openPopup();
+                }
+            });
         }
     </script>
 </body>

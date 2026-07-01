@@ -20,6 +20,12 @@ public class CollectionCenter {
     @Column(nullable = false)
     private String contact;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
     public CollectionCenter() {}
 
     public CollectionCenter(Integer centerId, String centerName, String location, String contact) {
@@ -27,6 +33,15 @@ public class CollectionCenter {
         this.centerName = centerName;
         this.location = location;
         this.contact = contact;
+    }
+
+    public CollectionCenter(Integer centerId, String centerName, String location, String contact, Double latitude, Double longitude) {
+        this.centerId = centerId;
+        this.centerName = centerName;
+        this.location = location;
+        this.contact = contact;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public Integer getCenterId() {
@@ -59,5 +74,21 @@ public class CollectionCenter {
 
     public void setContact(String contact) {
         this.contact = contact;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }
