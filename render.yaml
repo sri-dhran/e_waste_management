@@ -1,0 +1,28 @@
+databases:
+  - name: ewaste-db
+    databaseName: ewaste_db
+    user: ewaste_user
+    plan: free
+
+services:
+  - type: web
+    name: ewaste-backend
+    env: java
+    plan: free
+    buildCommand: mvn -f backend/pom.xml clean package -DskipTests
+    startCommand: java -jar backend/target/ewaste-management-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: JAVA_VERSION
+        value: "21"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: ewaste-db
+          property: jdbcConnectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: ewaste-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: ewaste-db
+          property: password
